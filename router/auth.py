@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Response, Depends
 from fastapi.responses import JSONResponse
-from model.dto import PreRegisterDTO
+from model.dto import PreRegisterDTO, RegisterDTO
 from service.auth import (
     verify_email_format,
     check_email_register_status,
     send_auth_mail,
     verify_token,
+    verify_user_name_format,
+    verify_password_format,
+    register_user,
     InvalidSignatureError,
     ExpiredSignatureError
 )
@@ -34,4 +37,26 @@ def get_preverify(pretoken: str, db=Depends(get_db)):
     except ExpiredSignatureError:
         return JSONResponse({"code":"EXPIRED_TOKEN"}, status_code=401)
 
-    return {"message":"good"}
+    return Response()
+
+@router.post("/register")
+def post_register(data: RegisterDTO, db=Depends(get_db)):
+    try:
+        token_payload = verify_token(data.pretoken) # {"email":"{이메일}", "exp":"{만료시간}"}
+    except InvalidSignatureError:
+        return JSONResponse({"code":"INVALID_TOKEN"}, status_code=401)
+    except ExpiredSignatureError:
+        return JSONResponse({"code":"EXPIRED_TOKEN"}, status_code=401)
+    
+    if not verify_user_name_format(data.user_name):
+        return JSONResponse({"code":"INVALID_USER_NAME"}, status_code=400)
+    
+    if not verify_password_format(data.password):
+        return JSONResponse({"code":"INVALID_PASSWORD"}, status_code=400)
+    
+    if check_email_register_status(token_payload["email"], db):
+        return JSONResponse({"code":"ALREADY_REGISTERED_EMAIL"}, status_code=400)
+    
+    register_user(token_payload["email"], data.user_name, data.password, db)
+
+    return Response()

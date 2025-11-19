@@ -1,8 +1,9 @@
-from sqlalchemy import select
+from sqlalchemy import select, insert
 from sqlalchemy.orm import Session
 from model.tables import Account
 from utils.tokener import create_pretoken, verify_token, InvalidSignatureError, ExpiredSignatureError
 from utils.mail import send_mail
+from utils.crypto_tools import password_hashing
 from dotenv import load_dotenv
 import os
 import re
@@ -11,6 +12,9 @@ load_dotenv()
 
 SERVICE_ADDRESS = os.getenv("SERVICE_ADDRESS")
 EMAIL_FORMAT = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+USER_NAME_FORMAT = re.compile(r"^[가-힣A-Za-z0-9_]+$")
+# 대소문자, 숫자, !@#$%^&*-_+=;:'",.<>?/ 특문, 최소 8자 이상
+PASSWORD_FORMAT = re.compile(r"^[A-Za-z0-9!@#$%^&*\-_+=;:\'\",.<>?/]{8,}$")
 
 def verify_email_format(email: str) -> bool:
     return not EMAIL_FORMAT.fullmatch(email) is None
@@ -25,3 +29,15 @@ def send_auth_mail(email: str, expire: int = 300) -> None:
         To=email,
         Message=f"{SERVICE_ADDRESS}/auth/preverify?pretoken={pretoken}"
     )
+
+def verify_user_name_format(user_name: str) -> bool:
+    return not USER_NAME_FORMAT.fullmatch(user_name) is None
+
+def verify_password_format(password: str) -> bool:
+    return not PASSWORD_FORMAT.fullmatch(password) is None
+
+def register_user(email: str, user_name: str, password: str, db: Session) -> None:
+    password_hash = password_hashing(password)
+    statement = insert(Account).values(email=email, user_name=user_name, password_hash=password_hash)
+    db.execute(statement)
+    db.commit()
