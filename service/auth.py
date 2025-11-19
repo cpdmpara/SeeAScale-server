@@ -1,7 +1,7 @@
 from sqlalchemy import select, insert
 from sqlalchemy.orm import Session
 from model.tables import Account
-from utils.tokener import create_pretoken, verify_token, InvalidSignatureError, ExpiredSignatureError
+from utils.tokener import create_pretoken, verify_token, create_login_token, InvalidSignatureError, ExpiredSignatureError
 from utils.mail import send_mail
 from utils.crypto_tools import password_hashing
 from dotenv import load_dotenv
@@ -36,8 +36,10 @@ def verify_user_name_format(user_name: str) -> bool:
 def verify_password_format(password: str) -> bool:
     return not PASSWORD_FORMAT.fullmatch(password) is None
 
-def register_user(email: str, user_name: str, password: str, db: Session) -> None:
+def register_user(email: str, user_name: str, password: str, db: Session) -> Account:
     password_hash = password_hashing(password)
-    statement = insert(Account).values(email=email, user_name=user_name, password_hash=password_hash)
-    db.execute(statement)
+    new_account = Account(user_name=user_name, email=email, password_hash=password_hash)
+    db.add(new_account)
     db.commit()
+
+    return new_account

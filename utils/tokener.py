@@ -17,3 +17,10 @@ def create_pretoken(email: str, expire: int) -> str:
 
 def verify_token(pretoken: str) -> dict | list:
     return jwt.decode(pretoken, JWT_KEY, "HS256")
+
+def create_login_token(uesr_name: str, expire: int) -> str:
+    payload = {
+        "uesr_name": uesr_name,
+        "exp": int(time.time()) + expire
+    }
+    return jwt.encode(payload=payload, key=JWT_KEY, algorithm="HS256")

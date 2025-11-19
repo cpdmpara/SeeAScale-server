@@ -9,10 +9,13 @@ from service.auth import (
     verify_user_name_format,
     verify_password_format,
     register_user,
+    create_login_token,
     InvalidSignatureError,
     ExpiredSignatureError
 )
 from database import get_db
+
+LOGIN_EXPIRE_PERIOD = 24 * 60 * 60
 
 router = APIRouter(prefix="/auth", tags=["/auth"])
 
@@ -57,6 +60,16 @@ def post_register(data: RegisterDTO, db=Depends(get_db)):
     if check_email_register_status(token_payload["email"], db):
         return JSONResponse({"code":"ALREADY_REGISTERED_EMAIL"}, status_code=400)
     
-    register_user(token_payload["email"], data.user_name, data.password, db)
+    new_account = register_user(token_payload["email"], data.user_name, data.password, db)
+    login_token = create_login_token(new_account.user_id, LOGIN_EXPIRE_PERIOD)
 
-    return Response()
+    response = Response()
+    response.set_cookie(
+        key="login_token",
+        value=login_token, 
+        max_age=LOGIN_EXPIRE_PERIOD,
+        httponly=True,
+        samesite="strict"
+    )
+
+    return response
