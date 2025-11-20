@@ -27,7 +27,7 @@ class Object(Base):
     quantity = Column(TINYINT(unsigned=True), nullable=False)
     likes_count = Column(INTEGER(unsigned=True), nullable=False)
     comment_count = Column(INTEGER(unsigned=True), nullable=False)
-    explaination = Column(TEXT, nullable=False)
+    explanation = Column(TEXT, nullable=False)
     created_at = Column(DATETIME, nullable=False)
     created_by = Column(INTEGER(unsigned=True), ForeignKey("account.user_id"), nullable=False)
 
