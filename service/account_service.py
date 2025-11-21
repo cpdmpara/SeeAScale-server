@@ -1,10 +1,20 @@
 from fastapi import Response, HTTPException, Depends
 from repository.account_repository import AccountRepository
+from model.account_model import AccountCreateRequest
 from utils.tokener import create_token, verify_token, jwt
 from utils.mail import send_preregister_mail
+from utils.crypto_tools import encode_id
+from dotenv import load_dotenv
+import os
 import re
 
+load_dotenv()
+
+COOKIE_SECURE_OPTION = os.getenv("COOKIE_SECURE_OPTION", None)
+
 EMAIL_FORMAT = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+USER_NAME_FORMAT = re.compile(r"^[가-힣A-Za-z0-9_]+$")
+PASSWORD_FORMAT = re.compile(r"^[A-Za-z0-9!@#$-_.?]{8,}$")
 
 class AccountService:
 
@@ -24,7 +34,7 @@ class AccountService:
 
         return Response(status_code=200)
     
-    def verify_pretoken(pretoken: str):
+    def verify_pretoken(self, pretoken: str):
         try:
             verify_token(pretoken)
         except jwt.InvalidSignatureError:
@@ -32,3 +42,34 @@ class AccountService:
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="EXPIRED_TOKEN")
         return Response(status_code=200)
+
+    def create_account(self, request: AccountCreateRequest):
+        try: 
+            userEmail = verify_token(request.pretoken)["email"]
+        except jwt.InvalidSignatureError:
+            raise HTTPException(status_code=401, detail="INVALID_TOKEN")
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="EXPIRED_TOKEN")
+          
+        account = self.repository.create_account(request.userName, userEmail, request.password)
+
+        login_token = create_token(
+            payload={
+                "userId": encode_id(account.userId),
+                "userName": account.userName
+            },
+            expire=86400 # 하루
+        )
+        
+        response = Response()
+        response.set_cookie(
+            key="login_token",
+            value=login_token,
+            max_age=86400, # 하루
+            httponly=True,
+            samesite="strict",
+            secure = not COOKIE_SECURE_OPTION is None
+        )
+
+        return response
+        
