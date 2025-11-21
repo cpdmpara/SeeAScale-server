@@ -96,3 +96,9 @@ class AccountService:
 
         return response
     
+    def logout(self):
+        response = Response()
+        response.delete_cookie("login_token")
+
+        return response
+

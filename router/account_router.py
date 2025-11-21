@@ -19,3 +19,7 @@ def create_account(request: AccountCreateRequest, accountService: AccountService
 @router.post("/login")
 def login(request: LoginRequest, accountService: AccountService = Depends()):
     return accountService.login(request)
+
+@router.post("/logout")
+def login(accountService: AccountService = Depends()):
+    return accountService.logout()
