@@ -1,6 +1,6 @@
 from fastapi import Response, HTTPException, Depends
 from repository.account_repository import AccountRepository
-from utils.tokener import create_token
+from utils.tokener import create_token, verify_token, jwt
 from utils.mail import send_preregister_mail
 import re
 
@@ -22,4 +22,13 @@ class AccountService:
 
         send_preregister_mail(email, pretoken)
 
+        return Response(status_code=200)
+    
+    def verify_pretoken(pretoken: str):
+        try:
+            verify_token(pretoken)
+        except jwt.InvalidSignatureError:
+            raise HTTPException(status_code=401, detail="INVALID_TOKEN")
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="EXPIRED_TOKEN")
         return Response(status_code=200)
