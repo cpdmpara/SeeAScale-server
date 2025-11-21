@@ -32,7 +32,7 @@ class AccountService:
 
         send_preregister_mail(email, pretoken)
 
-        return Response(status_code=200)
+        return Response(status_code=204)
     
     def verify_pretoken(self, pretoken: str):
         try:
@@ -41,7 +41,7 @@ class AccountService:
             raise HTTPException(status_code=401, detail="INVALID_TOKEN")
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="EXPIRED_TOKEN")
-        return Response(status_code=200)
+        return Response(status_code=204)
 
     def create_account(self, request: AccountCreateRequest):
         try: 
@@ -62,7 +62,7 @@ class AccountService:
           
         account = self.repository.create_account(request.userName, userEmail, request.password)
 
-        return self.login_response(account)
+        return self.login_response(account, status_code=201)
 
     def login(self, request: LoginRequest):
         account = self.repository.get_account_by_userEmail(request.userEmail)
@@ -75,7 +75,7 @@ class AccountService:
         
         return self.login_response(account)
     
-    def login_response(self, account: Account):
+    def login_response(self, account: Account, status_code: int = 200):
         login_token = create_token(
             payload={
                 "userId": encode_id(account.userId),
@@ -84,7 +84,7 @@ class AccountService:
             expire=86400 # 하루
         )
         
-        response = Response()
+        response = Response(status_code=status_code)
         response.set_cookie(
             key="login_token",
             value=login_token,
@@ -97,7 +97,7 @@ class AccountService:
         return response
     
     def logout(self):
-        response = Response()
+        response = Response(status_code=204)
         response.delete_cookie(
             key="login_token",
             httponly=True,
