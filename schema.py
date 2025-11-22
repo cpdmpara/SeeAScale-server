@@ -15,4 +15,5 @@ class Account(Base):
 if __name__ == "__main__":
     from database import engine
 
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine) # 테이블 CREATE
+    # Base.metadata.drop_all(bind=engine) # 테이블 DROP
