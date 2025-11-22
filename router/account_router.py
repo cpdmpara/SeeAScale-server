@@ -5,25 +5,25 @@ from model.account_model import PreregisterRequest, AccountCreateRequest, LoginR
 router = APIRouter(prefix="/auth", tags=["/auth"])
 
 @router.post("/preregister")
-def preregister(request: PreregisterRequest, accountService: AccountService = Depends()):
-    return accountService.preregister(request.email)
+def preregister(request: PreregisterRequest, service: AccountService = Depends()):
+    return service.preregister(request.email)
 
 @router.get("/preverify")
-def verify_pretoken(pretoken: str, accountService: AccountService = Depends()):
-    return accountService.verify_pretoken(pretoken)
+def verify_pretoken(pretoken: str, service: AccountService = Depends()):
+    return service.verify_pretoken(pretoken)
 
 @router.post("/register")
-def create_account(request: AccountCreateRequest, accountService: AccountService = Depends()):
-    return accountService.create_account(request)
+def create_account(request: AccountCreateRequest, service: AccountService = Depends()):
+    return service.create_account(request)
 
 @router.post("/login")
-def login(request: LoginRequest, accountService: AccountService = Depends()):
-    return accountService.login(request)
+def login(request: LoginRequest, service: AccountService = Depends()):
+    return service.login(request)
 
 @router.post("/logout")
-def login(accountService: AccountService = Depends()):
-    return accountService.logout()
+def login(service: AccountService = Depends()):
+    return service.logout()
 
 @router.get("/info")
-def get_login_info(login_token: str | None = Cookie(default=None), accountService: AccountService = Depends()):
-    return accountService.get_login_info(login_token)
+def get_login_info(login_token: str | None = Cookie(default=None), service: AccountService = Depends()):
+    return service.get_login_info(login_token)
