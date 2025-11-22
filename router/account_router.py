@@ -1,29 +1,30 @@
-from fastapi import APIRouter, Cookie, Depends
+from fastapi import APIRouter, Depends
 from service.account_service import AccountService
 from model.account_model import PreregisterRequest, AccountCreateRequest, LoginRequest
+from utils.cookie_manager import get_login_token
 
 router = APIRouter(prefix="/auth", tags=["/auth"])
 
 @router.post("/preregister")
-def preregister(request: PreregisterRequest, accountService: AccountService = Depends()):
-    return accountService.preregister(request.email)
+def preregister(request: PreregisterRequest, service: AccountService = Depends()):
+    return service.preregister(request=request)
 
 @router.get("/preverify")
-def verify_pretoken(pretoken: str, accountService: AccountService = Depends()):
-    return accountService.verify_pretoken(pretoken)
+def verify_pretoken(pretoken: str, service: AccountService = Depends()):
+    return service.verify_pretoken(pretoken=pretoken)
 
-@router.post("/register")
-def create_account(request: AccountCreateRequest, accountService: AccountService = Depends()):
-    return accountService.create_account(request)
+@router.post("")
+def create_account(request: AccountCreateRequest, service: AccountService = Depends()):
+    return service.create_account(request=request)
 
 @router.post("/login")
-def login(request: LoginRequest, accountService: AccountService = Depends()):
-    return accountService.login(request)
+def login(request: LoginRequest, service: AccountService = Depends()):
+    return service.login(request=request)
 
 @router.post("/logout")
-def login(accountService: AccountService = Depends()):
-    return accountService.logout()
+def logout(service: AccountService = Depends()):
+    return service.logout()
 
 @router.get("/info")
-def get_login_info(login_token: str | None = Cookie(default=None), accountService: AccountService = Depends()):
-    return accountService.get_login_info(login_token)
+def get_login_info(login_token: dict = Depends(get_login_token), service: AccountService = Depends()):
+    return service.get_logined_user_info(login_token=login_token)
