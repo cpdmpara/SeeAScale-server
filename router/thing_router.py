@@ -13,3 +13,7 @@ async def create_thing(
     service: ThingSerivce = Depends()
 ):
     return service.create_thing(request=request, imageFile = await imageFile.read(), login_token=login_token)
+
+@router.get("")
+def get_thing_list(prefix: int, page: int = 0, service: ThingSerivce = Depends()):
+    return service.get_thing_list(prefix, page)

@@ -1,9 +1,11 @@
 from fastapi import Depends
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from model.thing_model import ThingCreateRequest
 from utils.database import get_db
 from utils.schema import Thing
 from datetime import datetime
+from typing import List
 
 class ThingRepository:
     def __init__(self, db: Session = Depends(get_db)):
@@ -28,3 +30,7 @@ class ThingRepository:
         self.db.refresh(thing)
 
         return thing
+
+    def get_thing_list(self, prefix: int, page: int) -> List[Thing]:
+        statement = select(Thing).where(Thing.prefix == prefix).order_by(Thing.quantity).offset(page * 20).limit(20)
+        return self.db.execute(statement).scalars().all()

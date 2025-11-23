@@ -49,3 +49,22 @@ class ThingSerivce:
         )
 
         return response
+    
+    def get_thing_list(self, prefix: int, page: int):
+        things = self.repository.get_thing_list(prefix, page)
+        response = [
+            ThingSummaryResponse(
+                thingId = encode_id(i.thingId),
+                thingName = i.thingName,
+                prefix = i.prefix,
+                quantity = str(i.quantity),
+                likesCount = i.likesCount,
+                commentCount = i.commentCount,
+                createdAt = i.createdAt,
+                modifiedAt = i.modifiedAt,
+                createrId = encode_id(i.account.userId),
+                createrName = i.account.userName
+            ) for i in things
+        ]
+
+        return response
