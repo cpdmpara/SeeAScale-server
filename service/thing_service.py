@@ -14,7 +14,6 @@ class ThingSerivce:
     def create_thing(self, request: ThingCreateRequest, imageFile: bytes, login_token: dict):
         try:
             thingImage = Image.open(BytesIO(imageFile))
-            thingImage.verify()
             thingImage = thingImage.convert("RGB")
         except Exception:
             raise HTTPException(status_code=422, detail="WRONG_IMAGE_FORMAT")
