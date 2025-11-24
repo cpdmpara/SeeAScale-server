@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from utils.constant import JWT_KEY, JWT_ALGORITHM
+from utils.constant import JWT_KEY, JWT_ALGORITHM, INVALID_TOKEN, EXPIRED_TOKEN
 from typing import Any
 import jwt
 import time
@@ -12,6 +12,6 @@ def verify_token(token: str) -> Any:
     try:
         return jwt.decode(token, JWT_KEY, JWT_ALGORITHM)
     except jwt.InvalidSignatureError:
-        raise HTTPException(status_code=401, detail="INVALID_TOKEN")
+        raise HTTPException(status_code=401, detail=INVALID_TOKEN)
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="EXPIRED_TOKEN")
+        raise HTTPException(status_code=401, detail=EXPIRED_TOKEN)

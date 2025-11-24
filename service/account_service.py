@@ -1,7 +1,11 @@
 from fastapi import Response, HTTPException, Depends
 from repository.account_repository import AccountRepository
 from model.account_model import PreregisterRequest, AccountCreateRequest, LoginRequest, InfoResponse
-from utils.constant import RELEASE, PREREGISTER_EXPIRY_PERIOD, LOGIN_EXPIRY_PERIOD
+from utils.constant import (
+    RELEASE, PREREGISTER_EXPIRY_PERIOD, LOGIN_EXPIRY_PERIOD, 
+    ALREADY_REGISTERED_EMAIL, UNREGISTERED_EMAIL, INCORRECT_PASSWORD,
+    LOGIN_TOKEN_COOKIE
+)
 from utils.token_manager import create_token, verify_token
 from utils.mail_manager import send_preregister_mail
 from utils.crypto_manager import hash_password, encode_id
@@ -15,7 +19,7 @@ class AccountService:
         userEmail = request.userEmail
 
         if not self.repository.get_account_by_userEmail(userEmail) is None:
-            raise HTTPException(status_code=409, detail="ALREADY_REGISTERED_EMAIL")
+            raise HTTPException(status_code=409, detail=ALREADY_REGISTERED_EMAIL)
         
         pretoken = create_token({"email": userEmail}, expire=PREREGISTER_EXPIRY_PERIOD)
 
@@ -31,7 +35,7 @@ class AccountService:
         userEmail = verify_token(request.pretoken)["email"]
         
         if not self.repository.get_account_by_userEmail(userEmail) is None:
-            raise HTTPException(status_code=409, detail="ALREADY_REGISTERED_EMAIL")
+            raise HTTPException(status_code=409, detail=ALREADY_REGISTERED_EMAIL)
           
         account = self.repository.create_account(userName=request.userName, userEmail=userEmail, password=request.password)
 
@@ -41,10 +45,10 @@ class AccountService:
         account = self.repository.get_account_by_userEmail(request.userEmail)
 
         if account is None:
-            raise HTTPException(status_code=401, detail="UNREGISTERED_EMAIL")
+            raise HTTPException(status_code=401, detail=UNREGISTERED_EMAIL)
         
         if account.passwordHash != hash_password(request.password):
-            raise HTTPException(status_code=401, detail="INCORRECT_PASSWORD")
+            raise HTTPException(status_code=401, detail=INCORRECT_PASSWORD)
         
         return self.login_response(account)
     
@@ -56,7 +60,7 @@ class AccountService:
 
         response = Response(status_code=status_code)
         response.set_cookie(
-            key="login_token",
+            key=LOGIN_TOKEN_COOKIE,
             value=login_token,
             max_age=LOGIN_EXPIRY_PERIOD,
             httponly=True,
@@ -68,7 +72,7 @@ class AccountService:
     def logout(self):
         response = Response(status_code=204)
         response.delete_cookie(
-            key="login_token",
+            key=LOGIN_TOKEN_COOKIE,
             httponly=True,
             samesite="strict",
             secure=RELEASE

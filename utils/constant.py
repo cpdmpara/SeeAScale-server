@@ -27,8 +27,20 @@ JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
 # mail
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
+SMTP_SERVER_MAIL = "seeascale.auth@gmail.com"
+SMTP_MAIL_TITLE = "[See A Scale] 회원가입 이메일 인증"
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
 # crypto_tools
 HASH_PAPPER = os.getenv("HASH_PAPPER").encode()
 HASH_ID_SALT = os.getenv("HASH_ID_SALT")
+
+# error details
+INVALID_TOKEN = "INVALID_TOKEN"
+EXPIRED_TOKEN = "EXPIRED_TOKEN"
+ALREADY_REGISTERED_EMAIL = "ALREADY_REGISTERED_EMAIL"
+UNREGISTERED_EMAIL = "UNREGISTERED_EMAIL"
+INCORRECT_PASSWORD = "INCORRECT_PASSWORD"
+
+# cookies names
+LOGIN_TOKEN_COOKIE = "login_token"
