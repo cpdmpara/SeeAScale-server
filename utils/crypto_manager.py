@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from hashlib import sha256
 from hashids import Hashids
 from utils.constant import HASH_PAPPER, HASH_ID_SALT
@@ -13,4 +14,9 @@ def encode_id(id: int) -> str:
     return hashid.encode(id)
 
 def decode_id(id: str) -> int:
-    return hashid.decode(id)
+    id = hashid.decode(id)
+    
+    if id == ():
+        raise HTTPException(status_code=404)
+    
+    return id
