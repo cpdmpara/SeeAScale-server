@@ -93,11 +93,9 @@ class ThingSerivce:
     def modify_thing(self, request: ThingModifyRequest, thingId: str, login_token: dict):
         thingId: int = decode_id(thingId)
         userId = decode_id(login_token["userId"])
-        print(thingId)
-        print(userId)
         
         thing = self.repository.get_thing(thingId=thingId)
-        print(thing.account.userId, userId, thing.account.userId != userId)
+
         if thing is None:
             return HTTPException(status_code=404)
         
