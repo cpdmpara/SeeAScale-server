@@ -5,12 +5,13 @@ load_dotenv()
 
 # global
 RELEASE = not os.getenv("RELEASE") is None
+IMAGE_STORAGE_PATH = os.getenv("IMAGE_STORAGE_PATH")
 
 # format
 EMAIL_FORMAT = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
 USER_NAME_FORMAT = r"^[가-힣A-Za-z0-9_]{1,16}$"
-THING_NAME_FORMAT = r"^[가-힣A-Za-z0-9_]{1,32}$"
-PASSWORD_FORMAT = r"^[A-Za-z0-9!@#$-_.?]{8,}$"
+THING_NAME_FORMAT = r"^[가-힣A-Za-z0-9_\- ]{1,32}$"
+PASSWORD_FORMAT = r"^[A-Za-z0-9!@#$_.?-]{8,}$"
 
 # constant record
 PREREGISTER_EXPIRY_PERIOD = 10 * 60
@@ -26,8 +27,20 @@ JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
 # mail
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
+SMTP_SERVER_MAIL = "seeascale.auth@gmail.com"
+SMTP_MAIL_TITLE = "[See A Scale] 회원가입 이메일 인증"
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
 # crypto_tools
 HASH_PAPPER = os.getenv("HASH_PAPPER").encode()
 HASH_ID_SALT = os.getenv("HASH_ID_SALT")
+
+# error details
+INVALID_TOKEN = "INVALID_TOKEN"
+EXPIRED_TOKEN = "EXPIRED_TOKEN"
+ALREADY_REGISTERED_EMAIL = "ALREADY_REGISTERED_EMAIL"
+UNREGISTERED_EMAIL = "UNREGISTERED_EMAIL"
+INCORRECT_PASSWORD = "INCORRECT_PASSWORD"
+
+# cookies names
+LOGIN_TOKEN_COOKIE = "login_token"
