@@ -19,4 +19,4 @@ def decode_id(id: str) -> int:
     if id == ():
         raise HTTPException(status_code=404)
     
-    return id
+    return id[0]

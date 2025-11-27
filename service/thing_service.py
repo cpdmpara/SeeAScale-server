@@ -1,6 +1,6 @@
 from fastapi import Response, HTTPException, Depends
 from repository.thing_repository import ThingRepository
-from model.thing_model import ThingCreateRequest, ThingSummaryResponse, ThingResponse
+from model.thing_model import ThingCreateRequest, ThingModifyRequest, ThingSummaryResponse, ThingResponse
 from utils.crypto_manager import encode_id, decode_id
 from utils.mecro import unit_standardization
 from utils.constant import IMAGE_STORAGE_PATH
@@ -73,7 +73,6 @@ class ThingSerivce:
         thing = self.repository.get_thing(decode_id(thingId))
 
         response = Response(status_code=404)
-        
         if thing:
             response = ThingResponse(
                 thingId = encode_id(thing.thingId),
@@ -88,5 +87,43 @@ class ThingSerivce:
                 createrId = encode_id(thing.account.userId),
                 createrName = thing.account.userName
             )
+        
+        return response
+
+    def modify_thing(self, request: ThingModifyRequest, thingId: str, login_token: dict):
+        thingId: int = decode_id(thingId)
+        userId = decode_id(login_token["userId"])
+        print(thingId)
+        print(userId)
+        
+        thing = self.repository.get_thing(thingId=thingId)
+        print(thing.account.userId, userId, thing.account.userId != userId)
+        if thing is None:
+            return HTTPException(status_code=404)
+        
+        if thing.account.userId != userId:
+            raise HTTPException(status_code=403)
+        
+        thing = self.repository.modify_thing(
+            thingId = thingId,
+            thingName = request.thingName,
+            prefix = request.prefix,
+            quantity = request.quantity,
+            explanation = request.explaination
+        )
+
+        response = ThingResponse(
+            thingId = encode_id(thing.thingId),
+            thingName = thing.thingName,
+            prefix = thing.prefix,
+            quantity = str(thing.quantity),
+            explanation = thing.explanation,
+            likesCount = thing.likesCount,
+            commentCount = thing.commentCount,
+            createdAt = thing.createdAt,
+            modifiedAt = thing.modifiedAt,
+            createrId = encode_id(thing.account.userId),
+            createrName = thing.account.userName
+        )
         
         return response

@@ -43,12 +43,11 @@ class ThingRepository:
         self,
         thingId: int,
         thingName: str | None = None,
-        quantity: int | None = None,
         prefix: int | None = None,
+        quantity: int | None = None,
         explanation: str | None = None
     ) -> Thing | None:
-        statement = select(Thing).where(Thing.thingId == thingId)
-        thing = self.db.execute(statement).scalar_one_or_none()
+        thing = self.get_thing(thingId=thingId)
 
         if thing is None:
             return thing
@@ -64,6 +63,8 @@ class ThingRepository:
 
         if explanation:
             thing.explanation = explanation
+
+        thing.modifiedAt = datetime.now()
 
         self.db.commit()
         
