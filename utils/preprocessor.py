@@ -1,8 +1,9 @@
 from fastapi import HTTPException, Form, Cookie
-from utils.token_manager import verify_token
 from model.thing_model import ThingCreateRequest
+from utils.token_manager import verify_token
+from utils.constant import LOGIN_TOKEN_COOKIE
 
-def get_login_token(login_token: str | None = Cookie(None)) -> dict:
+def get_login_token(login_token: str | None = Cookie(None, alias=LOGIN_TOKEN_COOKIE)) -> dict:
     if login_token is None:
         raise HTTPException(status_code=401, detail="NOT_LOGINED")
     return verify_token(login_token)

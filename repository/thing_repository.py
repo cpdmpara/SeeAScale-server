@@ -11,7 +11,7 @@ class ThingRepository:
     def __init__(self, db: Session = Depends(get_db)):
         self.db = db
 
-    def create_thing(self, request: ThingCreateRequest, userId: int) -> Thing:
+    def create(self, request: ThingCreateRequest, userId: int) -> Thing:
         now = datetime.now()
         thing = Thing(
             thingName = request.thingName,
@@ -31,15 +31,15 @@ class ThingRepository:
 
         return thing
 
-    def get_thing_list(self, prefix: int, page: int) -> List[Thing]:
+    def get(self, thingId: int) -> Thing | None:
+        statement = select(Thing).where(Thing.thingId == thingId)
+        return self.db.execute(statement).scalar_one_or_none()
+    
+    def get_list(self, prefix: int, page: int) -> List[Thing]:
         statement = select(Thing).where(Thing.prefix == prefix).order_by(Thing.quantity).offset(page * 20).limit(20)
         return self.db.execute(statement).scalars().all()
     
-    def get_thing(self, thingId: int) -> Thing | None:
-        statement = select(Thing).where(Thing.thingId == thingId)
-        return self.db.execute(statement).scalar_one_or_none()
-
-    def modify_thing(
+    def update(
         self,
         thingId: int,
         thingName: str | None = None,
@@ -70,7 +70,7 @@ class ThingRepository:
         
         return thing
 
-    def delete_thing(self, thingId: int) -> None:
+    def delete(self, thingId: int) -> None:
         statement = select(Thing).where(Thing.thingId == thingId)
         thing = self.db.execute(statement).scalar_one_or_none()
         

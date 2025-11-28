@@ -11,7 +11,7 @@ class ThingSerivce:
     def __init__(self, repository: ThingRepository = Depends()):
         self.repository = repository
 
-    def create_thing(self, request: ThingCreateRequest, imageFile: bytes, login_token: dict):
+    def create(self, request: ThingCreateRequest, imageFile: bytes, login_token: dict):
         try:
             thingImage = Image.open(BytesIO(imageFile))
             thingImage = thingImage.convert("RGB")
@@ -21,7 +21,7 @@ class ThingSerivce:
         request.quantity, request.prefix = unit_standardization(request.quantity, request.prefix)
 
         userId = decode_id(login_token["userId"])
-        thing = self.repository.create_thing(request, userId)
+        thing = self.repository.create(request, userId)
 
         w, h = thingImage.size
         max_side = max(w, h)
@@ -50,8 +50,30 @@ class ThingSerivce:
 
         return response
     
-    def get_thing_list(self, prefix: int, page: int):
-        things = self.repository.get_thing_list(prefix, page)
+    def get(self, thingId: str):
+        thing = self.repository.get(decode_id(thingId))
+
+        response = Response(status_code=404)
+
+        if thing:
+            response = ThingResponse(
+                thingId = encode_id(thing.thingId),
+                thingName = thing.thingName,
+                prefix = thing.prefix,
+                quantity = str(thing.quantity),
+                explanation = thing.explanation,
+                likesCount = thing.likesCount,
+                commentCount = thing.commentCount,
+                createdAt = thing.createdAt,
+                modifiedAt = thing.modifiedAt,
+                createrId = encode_id(thing.account.userId),
+                createrName = thing.account.userName
+            )
+        
+        return response
+    
+    def get_list(self, prefix: int, page: int):
+        things = self.repository.get_list(prefix, page)
         response = [
             ThingSummaryResponse(
                 thingId = encode_id(i.thingId),
@@ -69,32 +91,11 @@ class ThingSerivce:
 
         return response
 
-    def get_thing(self, thingId: str):
-        thing = self.repository.get_thing(decode_id(thingId))
-
-        response = Response(status_code=404)
-        if thing:
-            response = ThingResponse(
-                thingId = encode_id(thing.thingId),
-                thingName = thing.thingName,
-                prefix = thing.prefix,
-                quantity = str(thing.quantity),
-                explanation = thing.explanation,
-                likesCount = thing.likesCount,
-                commentCount = thing.commentCount,
-                createdAt = thing.createdAt,
-                modifiedAt = thing.modifiedAt,
-                createrId = encode_id(thing.account.userId),
-                createrName = thing.account.userName
-            )
-        
-        return response
-
-    def modify_thing(self, request: ThingModifyRequest, thingId: str, login_token: dict):
+    def update(self, request: ThingModifyRequest, thingId: str, login_token: dict):
         thingId: int = decode_id(thingId)
         userId = decode_id(login_token["userId"])
         
-        thing = self.repository.get_thing(thingId=thingId)
+        thing = self.repository.get(thingId=thingId)
 
         if thing is None:
             return HTTPException(status_code=404)
@@ -102,7 +103,7 @@ class ThingSerivce:
         if thing.account.userId != userId:
             raise HTTPException(status_code=403)
         
-        thing = self.repository.modify_thing(
+        thing = self.repository.update(
             thingId = thingId,
             thingName = request.thingName,
             prefix = request.prefix,
@@ -126,15 +127,15 @@ class ThingSerivce:
         
         return response
 
-    def delete_thing(self, thingId: str, login_token: dict):
+    def delete(self, thingId: str, login_token: dict):
         thingId: int = decode_id(thingId)
         userId: int = decode_id(login_token["userId"])
 
-        thing = self.repository.get_thing(thingId=thingId)
+        thing = self.repository.get(thingId=thingId)
         
         if thing.account.userId != userId:
             raise HTTPException(status_code=403)
         
-        self.repository.delete_thing(thingId)
+        self.repository.delete(thingId)
 
         return Response(status_code=200)

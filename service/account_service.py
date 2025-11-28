@@ -1,15 +1,15 @@
 from fastapi import Response, HTTPException, Depends
 from repository.account_repository import AccountRepository
 from model.account_model import PreregisterRequest, AccountCreateRequest, LoginRequest, InfoResponse
+from utils.schema import Account
+from utils.crypto_manager import hash_password, encode_id
+from utils.token_manager import create_token, verify_token
+from utils.mail_manager import send_preregister_mail
 from utils.constant import (
     RELEASE, PREREGISTER_EXPIRY_PERIOD, LOGIN_EXPIRY_PERIOD, 
     ALREADY_REGISTERED_EMAIL, UNREGISTERED_EMAIL, INCORRECT_PASSWORD,
     LOGIN_TOKEN_COOKIE
 )
-from utils.token_manager import create_token, verify_token
-from utils.mail_manager import send_preregister_mail
-from utils.crypto_manager import hash_password, encode_id
-from utils.schema import Account
 
 class AccountService:
     def __init__(self, repository: AccountRepository = Depends()):
@@ -18,7 +18,7 @@ class AccountService:
     def preregister(self, request: PreregisterRequest):
         userEmail = request.userEmail
 
-        if not self.repository.get_account_by_userEmail(userEmail) is None:
+        if not self.repository.get_by_email(userEmail) is None:
             raise HTTPException(status_code=409, detail=ALREADY_REGISTERED_EMAIL)
         
         pretoken = create_token({"email": userEmail}, expire=PREREGISTER_EXPIRY_PERIOD)
@@ -31,18 +31,18 @@ class AccountService:
         verify_token(pretoken)
         return Response(status_code=200)
 
-    def create_account(self, request: AccountCreateRequest):
+    def create(self, request: AccountCreateRequest):
         userEmail = verify_token(request.pretoken)["email"]
         
-        if not self.repository.get_account_by_userEmail(userEmail) is None:
+        if not self.repository.get_by_email(userEmail) is None:
             raise HTTPException(status_code=409, detail=ALREADY_REGISTERED_EMAIL)
           
-        account = self.repository.create_account(userName=request.userName, userEmail=userEmail, password=request.password)
+        account = self.repository.create(userName=request.userName, userEmail=userEmail, password=request.password)
 
         return self.login_response(account, status_code=201)
 
     def login(self, request: LoginRequest):
-        account = self.repository.get_account_by_userEmail(request.userEmail)
+        account = self.repository.get_by_email(request.userEmail)
 
         if account is None:
             raise HTTPException(status_code=401, detail=UNREGISTERED_EMAIL)
@@ -79,7 +79,7 @@ class AccountService:
         )
         return response
 
-    def get_logined_user_info(self, login_token: dict):
+    def get(self, login_token: dict):
         response = InfoResponse(
             userId=login_token["userId"],
             userName=login_token["userName"]
