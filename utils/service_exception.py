@@ -1,0 +1,3 @@
+
+class AlreadyLiked(Exception):
+    pass

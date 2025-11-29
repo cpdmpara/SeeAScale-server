@@ -17,6 +17,7 @@ class Account(Base):
     passwordHash: Mapped[bytes] = mapped_column(BINARY(32), nullable=False)
 
     things: Mapped[List["Thing"]] = relationship("Thing", back_populates="account")
+    likes: Mapped[List["Likes"]] = relationship("Likes")
 
 class Thing(Base):
     __tablename__ = "Thing"
@@ -33,10 +34,17 @@ class Thing(Base):
     createdBy: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Account.userId"), nullable=False)
 
     account: Mapped["Account"] = relationship("Account", back_populates="things")
+    likes: Mapped[List["Likes"]] = relationship("Likes")
 
     __table_args__ = (
         CheckConstraint("quantity >= -10 AND quantity <= 10", name="check_quantity_range"),
     )
+
+class Likes(Base):
+    __tablename__ = "Likes"
+
+    userId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Account.userId"), primary_key=True)
+    thingId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Thing.thingId"), primary_key=True)
 
 if __name__ == "__main__":
     from database import engine

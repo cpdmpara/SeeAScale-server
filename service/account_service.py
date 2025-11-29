@@ -7,7 +7,7 @@ from utils.token_manager import create_token, verify_token
 from utils.mail_manager import send_preregister_mail
 from utils.constant import (
     RELEASE, PREREGISTER_EXPIRY_PERIOD, LOGIN_EXPIRY_PERIOD, 
-    ALREADY_REGISTERED_EMAIL, UNREGISTERED_EMAIL, INCORRECT_PASSWORD,
+    ALREADY_REGISTERED, UNREGISTERED, INCORRECT_PASSWORD,
     LOGIN_TOKEN_COOKIE
 )
 
@@ -19,7 +19,7 @@ class AccountService:
         userEmail = request.userEmail
 
         if not self.repository.get_by_email(userEmail) is None:
-            raise HTTPException(status_code=409, detail=ALREADY_REGISTERED_EMAIL)
+            raise HTTPException(status_code=409, detail=ALREADY_REGISTERED)
         
         pretoken = create_token({"email": userEmail}, expire=PREREGISTER_EXPIRY_PERIOD)
 
@@ -35,7 +35,7 @@ class AccountService:
         userEmail = verify_token(request.pretoken)["email"]
         
         if not self.repository.get_by_email(userEmail) is None:
-            raise HTTPException(status_code=409, detail=ALREADY_REGISTERED_EMAIL)
+            raise HTTPException(status_code=409, detail=ALREADY_REGISTERED)
           
         account = self.repository.create(userName=request.userName, userEmail=userEmail, password=request.password)
 
@@ -45,7 +45,7 @@ class AccountService:
         account = self.repository.get_by_email(request.userEmail)
 
         if account is None:
-            raise HTTPException(status_code=401, detail=UNREGISTERED_EMAIL)
+            raise HTTPException(status_code=401, detail=UNREGISTERED)
         
         if account.passwordHash != hash_password(request.password):
             raise HTTPException(status_code=401, detail=INCORRECT_PASSWORD)
