@@ -6,6 +6,7 @@ from utils.mecro import unit_standardization
 from utils.constant import IMAGE_STORAGE_PATH
 from PIL import Image
 from io import BytesIO
+import os
 
 class ThingSerivce:
     def __init__(self, repository: ThingRepository = Depends()):
@@ -31,7 +32,7 @@ class ThingSerivce:
         canvas.paste(thingImage, offset)
         canvas = canvas.resize((512, 512), Image.LANCZOS)
         
-        canvas.save(f"{IMAGE_STORAGE_PATH}/{thing.thingId}.jpg", format="JPEG", quality=90)
+        canvas.save(f"{IMAGE_STORAGE_PATH}/{thing.thingId}.jpeg", format="JPEG", quality=90)
         canvas.close()
         thingImage.close()
 
@@ -132,10 +133,14 @@ class ThingSerivce:
         userId: int = decode_id(login_token["userId"])
 
         thing = self.repository.get(thingId=thingId)
+
+        if thing is None:
+            raise HTTPException(status_code=404)
         
         if thing.account.userId != userId:
             raise HTTPException(status_code=403)
         
         self.repository.delete(thingId)
+        os.remove(f"{IMAGE_STORAGE_PATH}/{thingId}.jpeg")
 
         return Response(status_code=200)
