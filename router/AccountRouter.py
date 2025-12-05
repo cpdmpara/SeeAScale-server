@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Response, HTTPException, Depends
+from fastapi.responses import JSONResponse
 from service.AccountService import AccountService, AccountServiceException
 from dto.AccountDto import AccountPreregisterRequestDto, AccountCreateRequestDto, AccountLoginRequestDto
 from utils.crypto_manager import create_token, verify_token, encode_id
@@ -40,7 +41,7 @@ def create(request: AccountCreateRequestDto, service: AccountService = Depends()
         expire=LOG_IN_TOKEN_EXPIRY_PERIOD
     )
 
-    response = Response(status_code=201)
+    response = JSONResponse(content={"name": account.name}, status_code=201)
     response.set_cookie(
         key=COOKIE_LOG_IN,
         value=logInToken,
