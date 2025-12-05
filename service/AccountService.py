@@ -10,6 +10,8 @@ class AccountServiceException:
     class AreadyRegisteredEmail(Exception): pass
     class InvalidSignupToken(Exception): pass
     class ExpiredSignupToken(Exception): pass
+    class UnregisteredEmail(Exception): pass
+    class IncorrectPassword(Exception): pass
 
 class AccountService:
     def __init__(self, repository: AccountRepository = Depends()):
@@ -51,4 +53,17 @@ class AccountService:
         result = AccountInternalDto.model_validate(account)
 
         self.repository.commit()
+        return result
+    
+    def login(self, email: str, password: str):
+        account = self.repository.get_by_email(email)
+
+        if account is None:
+            raise AccountServiceException.UnregisteredEmail()
+
+        if account.hashedPassword != hash_password(password):
+            raise AccountServiceException.IncorrectPassword()
+        
+        result = AccountInternalDto.model_validate(account)
+        
         return result

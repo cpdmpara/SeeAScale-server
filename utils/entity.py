@@ -41,5 +41,5 @@ class Thing(Base):
 if __name__ == "__main__":
     from database import engine
 
-    # Base.metadata.drop_all(bind=engine) # 테이블 DROP
+    Base.metadata.drop_all(bind=engine) # 테이블 DROP
     Base.metadata.create_all(bind=engine) # 테이블 CREATE
