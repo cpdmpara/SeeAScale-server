@@ -16,7 +16,7 @@ async def exception_catcher(request: Request, next_call):
             raise HTTPException(status_code=404)
     except HTTPException as e:
         response = JSONResponse(
-            {"detail": e.detail},
+            content = {"detail": e.detail},
             status_code = e.status_code,
             headers = e.headers
         )

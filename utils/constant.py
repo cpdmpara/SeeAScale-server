@@ -13,8 +13,8 @@ NAME_FORMAT = r"^[가-힣A-Za-z0-9_]{1,32}$"
 PASSWORD_FORMAT = r"^[A-Za-z0-9!@#$_.?-]{8,}$"
 
 # constant record
-PREREGISTER_EXPIRY_PERIOD = 10 * 60 # 10 min
-LOG_IN_EXPIRY_PERIOD = 24 * 60 * 60  # 1 day
+SIGN_UP_TOKEN_EXPIRY_PERIOD = 10 * 60 # 10 min
+LOG_IN_TOKEN_EXPIRY_PERIOD = 24 * 60 * 60  # 1 day
 
 # database
 DB_URL = os.getenv("DB_URL")
@@ -26,6 +26,7 @@ SMTP_MAIL_ADDRESS = os.getenv("SMTP_MAIL_ADDRESS")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
 # crypto_tools
+FERNET_KEY = os.getenv("FERNET_KEY")
 PASSWORD_HASHING_PAPPER = os.getenv("PASSWORD_HASHING_PAPPER").encode()
 ID_HASHING_SALT = os.getenv("ID_HASHING_SALT")
 JWT_KEY = os.getenv("JWT_KEY")

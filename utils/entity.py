@@ -14,7 +14,7 @@ class Account(Base):
     accountId: Mapped[int] = mapped_column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(VARCHAR(100), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(VARCHAR(32), nullable=False)
-    passwordHash: Mapped[bytes] = mapped_column(BINARY(32), nullable=False)
+    hashedPassword: Mapped[bytes] = mapped_column(BINARY(32), nullable=False)
 
     things: Mapped[List["Thing"]] = relationship("Thing", back_populates="account")
 
@@ -41,5 +41,5 @@ class Thing(Base):
 if __name__ == "__main__":
     from database import engine
 
-    Base.metadata.drop_all(bind=engine) # 테이블 DROP
+    # Base.metadata.drop_all(bind=engine) # 테이블 DROP
     Base.metadata.create_all(bind=engine) # 테이블 CREATE

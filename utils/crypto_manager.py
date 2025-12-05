@@ -1,15 +1,31 @@
+from cryptography.fernet import Fernet
+import json
+from base64 import urlsafe_b64encode, urlsafe_b64decode
 from hashlib import sha256
 from hashids import Hashids
 import jwt
 import time
-from utils.constant import PASSWORD_HASHING_PAPPER, ID_HASHING_SALT, JWT_KEY, JWT_ALGORITHM
+from utils.constant import FERNET_KEY, PASSWORD_HASHING_PAPPER, ID_HASHING_SALT, JWT_KEY, JWT_ALGORITHM
 
 class CryptoManagerException:
     class InvalidId(Exception): pass
     class InvalidToken(Exception): pass
     class ExpiredToken(Exception): pass
 
-hashid = Hashids(ID_HASHING_SALT, 16)
+hashid = Hashids(ID_HASHING_SALT, 20)
+fernet = Fernet(FERNET_KEY)
+
+def encrypt_dict(obj: dict) -> str:
+    plain = json.dumps(obj, ensure_ascii=False).encode()
+    cipher = fernet.encrypt(plain)
+    result = urlsafe_b64encode(cipher).decode()
+    return result
+
+def decrypt_dict(string: str) -> dict:
+    cipher = urlsafe_b64decode(string.encode())
+    plain = fernet.decrypt(cipher)
+    result = json.loads(plain.decode())
+    return result
 
 def hash_password(password: str) -> bytes:
     first_hashing = sha256(password.encode()).digest()
