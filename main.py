@@ -1,7 +1,9 @@
 from fastapi import FastAPI
-from router import account_router, thing_router
+from utils.middleware import exception_catcher
+from router import AccountRouter
 
 app = FastAPI()
 
-app.include_router(account_router.router)
-app.include_router(thing_router.router)
+app.middleware("http")(exception_catcher)
+
+app.include_router(AccountRouter.router)
