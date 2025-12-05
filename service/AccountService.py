@@ -43,7 +43,7 @@ class AccountService:
             raise AccountServiceException.ExpiredSignupToken()
 
         email = payload["email"]
-        name = payload["email"]
+        name = payload["name"]
         hashedPassword = bytes.fromhex(payload["hashedPassword"])
 
         if not self.repository.get_by_email(email) is None:

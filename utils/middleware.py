@@ -1,7 +1,8 @@
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 from utils.crypto_manager import CryptoManagerException
-from utils.constant import INVALID_TOKEN, EXPIRED_TOKEN
+from utils.request_manager import RequestManagerException
+from utils.constant import INVALID_TOKEN, EXPIRED_TOKEN, NOT_LOGGED_IN
 
 async def exception_catcher(request: Request, next_call):
     try:
@@ -14,6 +15,8 @@ async def exception_catcher(request: Request, next_call):
             raise HTTPException(status_code=401, detail=EXPIRED_TOKEN)
         except CryptoManagerException.InvalidId:
             raise HTTPException(status_code=404)
+        except RequestManagerException.NotLoggedIn:
+            raise HTTPException(status_code=401, detail=NOT_LOGGED_IN)
     except HTTPException as e:
         response = JSONResponse(
             content = {"detail": e.detail},

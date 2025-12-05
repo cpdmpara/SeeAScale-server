@@ -2,7 +2,8 @@ from fastapi import APIRouter, Response, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from service.AccountService import AccountService, AccountServiceException
 from dto.AccountDto import AccountPreregisterRequestDto, AccountCreateRequestDto, AccountLoginRequestDto
-from utils.crypto_manager import create_token, verify_token, encode_id
+from utils.crypto_manager import create_token, encode_id
+from utils.request_manager import get_log_in_token
 from utils.constant import (
     RELEASE,
     ALREADY_REGISTERED, INVALID_TOKEN, EXPIRED_TOKEN, UNREGISTERED, INCORRECT_PASSWORD,
@@ -92,3 +93,7 @@ def logout():
         samesite="strict"
     )
     return response
+
+@router.get("/my-name")
+def get_my_name(logInToken: dict = Depends(get_log_in_token)):
+    return {"name": logInToken["name"]}
