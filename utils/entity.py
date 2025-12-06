@@ -17,6 +17,7 @@ class Account(Base):
     hashedPassword: Mapped[bytes] = mapped_column(BINARY(32), nullable=False)
 
     things: Mapped[List["Thing"]] = relationship("Thing", back_populates="creater")
+    comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="creater")
 
 class Thing(Base):
     __tablename__ = "Thing"
@@ -33,10 +34,24 @@ class Thing(Base):
     createrId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Account.accountId"), nullable=False)
 
     creater: Mapped["Account"] = relationship("Account", back_populates="things")
+    comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="thing")
 
     __table_args__ = (
         CheckConstraint("prefix >= -10 AND prefix <= 10", name="check_prefix_range"),
     )
+
+class Comment(Base):
+    __tablename__ = "Comment"
+
+    commentId: Mapped[int] = mapped_column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
+    content: Mapped[str] = mapped_column(VARCHAR(200), nullable=False)
+    createdAt: Mapped[datetime] = mapped_column(DATETIME, nullable=False)
+    modifiedAt: Mapped[datetime] = mapped_column(DATETIME, nullable=False)
+    createrId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Account.accountId"), nullable=False)
+    thingId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Thing.thingId"), nullable=False)
+    
+    creater: Mapped["Account"] = relationship("Account", back_populates="comments")
+    thing: Mapped["Thing"] = relationship("Thing", back_populates="comments")
 
 if __name__ == "__main__":
     from database import engine

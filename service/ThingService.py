@@ -60,7 +60,7 @@ class ThingService:
         prefix: int | None = None,
         quantity: Decimal | None = None,
         explanation: str | None = None
-    ) -> ThingInternalDto | None:
+    ) -> ThingInternalDto:
         thing = self.repository.get(thingId)
 
         if thing is None: raise ThingServiceException.NotFoundThing()
