@@ -16,7 +16,7 @@ class Account(Base):
     name: Mapped[str] = mapped_column(VARCHAR(32), nullable=False)
     hashedPassword: Mapped[bytes] = mapped_column(BINARY(32), nullable=False)
 
-    things: Mapped[List["Thing"]] = relationship("Thing", back_populates="account")
+    things: Mapped[List["Thing"]] = relationship("Thing", back_populates="creater")
 
 class Thing(Base):
     __tablename__ = "Thing"
@@ -30,12 +30,12 @@ class Thing(Base):
     commentCount: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
     createdAt: Mapped[datetime] = mapped_column(DATETIME, nullable=False)
     modifiedAt: Mapped[datetime] = mapped_column(DATETIME, nullable=False)
-    createdBy: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Account.accountId"), nullable=False)
+    createrId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Account.accountId"), nullable=False)
 
-    account: Mapped["Account"] = relationship("Account", back_populates="things")
+    creater: Mapped["Account"] = relationship("Account", back_populates="things")
 
     __table_args__ = (
-        CheckConstraint("quantity >= -10 AND quantity <= 10", name="check_quantity_range"),
+        CheckConstraint("prefix >= -10 AND prefix <= 10", name="check_prefix_range"),
     )
 
 if __name__ == "__main__":
