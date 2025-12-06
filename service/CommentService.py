@@ -10,9 +10,10 @@ class CommentService:
         self.repository = repository
     
     def create(self, content: str, thingId: int, createrId: int) -> CommentInternalDto:
-        if self.repository.get_thing(thingId) is None: raise CommentServiceException.NotFoundThing()
+        thing = self.repository.get_thing(thingId)
+        if thing is None: raise CommentServiceException.NotFoundThing()
 
-        comment = self.repository.create(content, thingId, createrId)
+        comment = self.repository.create(content, thing, createrId)
 
         result = CommentInternalDto.model_validate(comment)
         result.createrName = comment.creater.name
