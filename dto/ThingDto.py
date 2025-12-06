@@ -9,6 +9,19 @@ class ThingCreateRequestDto(BaseModel):
     quantity: Decimal
     explanation: str
 
+class ThingResponseDto(BaseModel):
+    thingId: str
+    title: str
+    prefix: int
+    quantity: Decimal
+    explanation: str
+    likesCount: int
+    commentCount: int
+    createdAt: datetime
+    modifiedAt: datetime
+    createrId: str
+    createrName: str
+
 class ThingInternalDto(BaseModel):
     thingId: int
     title: str
