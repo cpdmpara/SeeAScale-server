@@ -8,7 +8,7 @@ from io import BytesIO
 
 router = APIRouter(prefix="/thing", tags=["thing"])
 
-@router.post("")
+@router.post("", status_code=201)
 async def create(
     request: ThingCreateRequestDto = Depends(thing_create_body),
     imageFile: UploadFile = File(),
