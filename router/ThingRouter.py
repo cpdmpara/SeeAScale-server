@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, HTTPException, Depends, File, Query
+from fastapi import APIRouter, UploadFile, Response, HTTPException, Depends, File, Query
 from service.ThingService import ThingService, ThingServiceException
 from dto.ThingDto import ThingCreateRequestDto, ThingUpdateRequestDto, ThingResponseDto, ThingInternalDto
 from utils.crypto_manager import encode_id, decode_id
@@ -28,18 +28,16 @@ async def create(
         raise HTTPException(status_code=409, detail=WRONG_IMAGE_FORMAT)
 
     response = internal_dto_to_response_dto(thing)
-
     return response
 
 @router.get("")
-def get_list(prefix: int = Query(ge=-10, le=10), page: int = Query(ge=0), service: ThingService = Depends()):
+def get_list(prefix: int = Query(ge=-10, le=10, example=3), page: int = Query(ge=0, example=0), service: ThingService = Depends()):
     try:
         things = service.get_list(prefix, page)
     except ThingServiceException.NotFoundThing:
         raise HTTPException(status_code=404)
 
     response = [internal_dto_to_response_dto(thing) for thing in things]
-
     return response
 
 @router.get("/{thingId:str}")
@@ -48,7 +46,6 @@ def get(thingId: str, service: ThingService = Depends()):
     if thing is None: raise HTTPException(status_code=404)
 
     response = internal_dto_to_response_dto(thing)
-
     return response
 
 @router.patch("/{thingId:str}")
@@ -81,6 +78,16 @@ async def update(
     response = internal_dto_to_response_dto(thing)
     return response
 
+@router.delete("{thingId:str}")
+def delete(thingId: str, logInToken: dict = Depends(get_log_in_token), service: ThingService = Depends()):
+    try:
+        service.delete(decode_id(thingId), decode_id(logInToken["accountId"]))
+    except ThingServiceException.NoAuthoiry:
+        raise HTTPException(status_code=403, detail=NO_AUTHORITY)
+    except ThingServiceException.NotFoundThing:
+        raise HTTPException(status_code=404)
+
+    return Response(status_code=200)
 
 def internal_dto_to_response_dto(thing: ThingInternalDto) -> ThingResponseDto:
     result = ThingResponseDto(

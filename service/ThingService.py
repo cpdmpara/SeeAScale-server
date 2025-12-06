@@ -5,6 +5,7 @@ from utils.constant import IMAGE_STORAGE_PATH
 from decimal import Decimal, ROUND_DOWN
 from PIL import Image
 from io import BytesIO
+import os
 
 class ThingServiceException:
     class WrongImageFormat(Exception): pass
@@ -77,6 +78,18 @@ class ThingService:
 
         self.repository.commit()
         return response
+    
+    def delete(self, thingId: int, accountId: int) -> None:
+        thing = self.repository.get(thingId)
+
+        if thing is None: raise ThingServiceException.NotFoundThing()
+        if thing.createrId != accountId: raise ThingServiceException.NoAuthoiry()
+        
+        try: os.remove(f"{IMAGE_STORAGE_PATH}/{thing.thingId}.jpeg")
+        except: pass
+
+        self.repository.delete(thing)
+        self.repository.commit()
 
 def thing_to_internal_dto(thing: Thing) -> ThingInternalDto:
     result = ThingInternalDto.model_validate(thing)

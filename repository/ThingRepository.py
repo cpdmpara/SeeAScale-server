@@ -53,5 +53,8 @@ class ThingRepsitory:
 
         return thing
 
+    def delete(self, thing: Thing) -> None:
+        self.db.delete(thing)
+
     def commit(self):
         self.db.commit()
