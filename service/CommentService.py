@@ -1,5 +1,5 @@
 from fastapi import Depends
-from repository.CommentRepository import CommentRepository
+from repository.CommentRepository import CommentRepository, Comment
 from dto.CommentDto import CommentInternalDto
 
 class CommentServiceException:
@@ -15,8 +15,20 @@ class CommentService:
 
         comment = self.repository.create(content, thing, createrId)
 
-        result = CommentInternalDto.model_validate(comment)
-        result.createrName = comment.creater.name
+        result = comment_to_internal_dto(comment)
 
         self.repository.commit()
         return result
+
+    def get_list(self, thingId: int) -> list[CommentInternalDto]:
+        comments = self.repository.get_list(thingId)
+        if comments is None: raise CommentServiceException.NotFoundThing()
+
+        result = [comment_to_internal_dto(comment) for comment in comments]
+
+        return result
+
+def comment_to_internal_dto(comment: Comment) -> CommentInternalDto:
+    result = CommentInternalDto.model_validate(comment)
+    result.createrName = comment.creater.name
+    return result

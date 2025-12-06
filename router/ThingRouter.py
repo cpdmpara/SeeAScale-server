@@ -31,7 +31,7 @@ async def create(
     return response
 
 @router.get("")
-def get_list(prefix: int = Query(ge=-10, le=10, example=3), page: int = Query(ge=0, example=0), service: ThingService = Depends()):
+def get_list(prefix: int = Query(ge=-10, le=10, example=0), page: int = Query(ge=0, example=0), service: ThingService = Depends()):
     try:
         things = service.get_list(prefix, page)
     except ThingServiceException.NotFoundThing:

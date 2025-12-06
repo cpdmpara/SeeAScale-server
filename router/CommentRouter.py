@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from service.CommentService import CommentService, CommentServiceException
-from dto.CommentDto import CommentCreateRequestDto, CommentResponseDto
+from dto.CommentDto import CommentCreateRequestDto, CommentResponseDto, CommentInternalDto
 from utils.request_manager import get_log_in_token
 from utils.crypto_manager import encode_id, decode_id
 
@@ -13,7 +13,19 @@ def create(request: CommentCreateRequestDto, thingId: str, logInToken = Depends(
     except CommentServiceException.NotFoundThing:
         raise HTTPException(status_code=404)
     
+    response = internal_dto_to_response_dto(comment)
+    return response
+
+@router.get("/{thingId:str}")
+def get_list(thingId: str, service: CommentService = Depends()):
+    try:
+        comments = service.get_list(decode_id(thingId))
+    except CommentServiceException.NotFoundThing:
+        raise HTTPException(status_code=404)
+    response = [internal_dto_to_response_dto(comment) for comment in comments]
+    return response
+
+def internal_dto_to_response_dto(comment: CommentInternalDto) -> CommentResponseDto:
     comment.commentId = encode_id(comment.commentId)
     comment.createrId = encode_id(comment.createrId)
-    response = CommentResponseDto(**comment.model_dump())
-    return response
+    return CommentResponseDto(**comment.model_dump())
