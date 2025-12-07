@@ -42,6 +42,9 @@ class CommentRepository:
         comment.modifiedAt = datetime.now()
         return comment
     
+    def delete(self, comment: Comment) -> None:
+        self.db.delete(comment)
+    
     def get_thing(self, thingId: int) -> Thing | None:
         statement = select(Thing).where(Thing.thingId == thingId)
         return self.db.execute(statement).scalar_one_or_none()

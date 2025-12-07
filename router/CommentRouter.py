@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Response, HTTPException, Depends
 from service.CommentService import CommentService, CommentServiceException
 from dto.CommentDto import CommentCreateRequestDto, CommentUpdateRequestDto, CommentResponseDto, CommentInternalDto
 from utils.request_manager import get_log_in_token
@@ -36,6 +36,16 @@ def update(request: CommentUpdateRequestDto, commentId: str, logInToken: dict = 
         raise HTTPException(status_code=404)
     
     return internal_dto_to_response_dto(comment)
+
+@router.delete("/{commentId:str}")
+def delete(commentId: str, logInToken: dict = Depends(get_log_in_token), service: CommentService = Depends()):
+    try:
+        service.delete(decode_id(commentId), decode_id(logInToken["accountId"]))
+    except CommentServiceException.NoAuthority:
+        raise HTTPException(status_code=403, detail=NO_AUTHORITY)
+    except CommentServiceException.NotFoundComment:
+        raise HTTPException(status_code=404)
+    return Response(status_code=200)
 
 def internal_dto_to_response_dto(comment: CommentInternalDto) -> CommentResponseDto:
     comment.commentId = encode_id(comment.commentId)

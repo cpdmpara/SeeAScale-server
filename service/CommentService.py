@@ -30,7 +30,7 @@ class CommentService:
 
         return result
     
-    def update(self, commentId: int, accountId: int, content: str):
+    def update(self, commentId: int, accountId: int, content: str) -> CommentInternalDto:
         comment = self.repository.get(commentId)
         if comment is None: raise CommentServiceException.NotFoundComment()
         if comment.createrId != accountId: raise CommentServiceException.NoAuthority()
@@ -40,6 +40,15 @@ class CommentService:
         result = comment_to_internal_dto(comment)
         self.repository.commit()
         return result
+    
+    def delete(self, commentId: int, accountId: int) -> None:
+
+        comment = self.repository.get(commentId)
+        if comment is None: raise CommentServiceException.NotFoundComment()
+        if comment.createrId != accountId: raise CommentServiceException.NoAuthority()
+
+        self.repository.delete(comment)
+        self.repository.commit()
 
 def comment_to_internal_dto(comment: Comment) -> CommentInternalDto:
     result = CommentInternalDto.model_validate(comment)
