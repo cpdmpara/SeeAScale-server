@@ -18,7 +18,7 @@ class Account(Base):
 
     things: Mapped[List["Thing"]] = relationship("Thing", back_populates="creater")
     comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="creater")
-    likes: Mapped[List["Like"]] = relationship("Like", back_populates="creater")
+    likes: Mapped[List["Like"]] = relationship("Like", back_populates="account")
 
 class Thing(Base):
     __tablename__ = "Thing"
@@ -35,8 +35,8 @@ class Thing(Base):
     createrId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Account.accountId"), nullable=False)
 
     creater: Mapped["Account"] = relationship("Account", back_populates="things")
-    comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="thing")
-    likes: Mapped[List["Like"]] = relationship("Like", back_populates="thing")
+    comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="thing", cascade="all, delete-orphan")
+    likes: Mapped[List["Like"]] = relationship("Like", back_populates="thing", cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint("prefix >= -10 AND prefix <= 10", name="check_prefix_range"),
@@ -50,7 +50,7 @@ class Comment(Base):
     createdAt: Mapped[datetime] = mapped_column(DATETIME, nullable=False)
     modifiedAt: Mapped[datetime] = mapped_column(DATETIME, nullable=False)
     createrId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Account.accountId"), nullable=False)
-    thingId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Thing.thingId"), nullable=False)
+    thingId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Thing.thingId", ondelete="CASCADE"), nullable=False)
     
     creater: Mapped["Account"] = relationship("Account", back_populates="comments")
     thing: Mapped["Thing"] = relationship("Thing", back_populates="comments")
@@ -58,10 +58,10 @@ class Comment(Base):
 class Like(Base):
     __tablename__ = "Like"
 
-    createrId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Account.accountId"), primary_key=True)
-    thingId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Thing.thingId"), primary_key=True)
+    accountId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Account.accountId"), primary_key=True)
+    thingId: Mapped[int] = mapped_column(INTEGER(unsigned=True), ForeignKey("Thing.thingId", ondelete="CASCADE"), primary_key=True)
 
-    creater: Mapped["Account"] = relationship("Account", back_populates="likes")
+    account: Mapped["Account"] = relationship("Account", back_populates="likes")
     thing: Mapped["Thing"] = relationship("Thing", back_populates="likes")
 
 if __name__ == "__main__":

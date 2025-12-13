@@ -1,106 +1,88 @@
-from fastapi import APIRouter, UploadFile, Response, HTTPException, Depends, File, Query
+from fastapi import APIRouter, UploadFile, Response, HTTPException, Depends, Form, File, Query, Path
 from service.ThingService import ThingService, ThingServiceException
-from dto.ThingDto import ThingCreateRequestDto, ThingUpdateRequestDto, ThingResponseDto, ThingInternalDto
+from dto.ThingDto import ThingSummaryResponseDto, ThingResponseDto, ThingSummaryInternalDto, ThingInternalDto
 from utils.crypto_manager import encode_id, decode_id
-from utils.request_manager import get_log_in_token, thing_create_body, thing_update_body
-from utils.constant import WRONG_IMAGE_FORMAT, NO_AUTHORITY
-from io import BytesIO
+from utils.request_manager import RequestManagerException, get_log_in_token, thing_update_body
+from utils.constant import WRONG_IMAGE_FORMAT, NO_AUTHORITY, DECIMAL_FORMAT
+from decimal import Decimal
+from typing import Type
 
 router = APIRouter(prefix="/thing", tags=["thing"])
 
 @router.post("", status_code=201)
 async def create(
-    request: ThingCreateRequestDto = Depends(thing_create_body),
+    title: str = Form(min_length=1, max_length=32, examples=["물체 이름"]),
     imageFile: UploadFile = File(),
-    logInToken: dict = Depends(get_log_in_token),
+    prefix: int = Form(ge=-10, le=10, examples=[0]),
+    quantity: str = Form(pattern=DECIMAL_FORMAT, examples=[1.78]),
+    explanation: str = Form(min_length=0, max_length=500, examples=["물체 설명"]),
+    logInToken: dict | None = Depends(get_log_in_token),
     service: ThingService = Depends()
 ):
-    try:
-        thing = service.create(
-            request.title,
-            BytesIO(await imageFile.read()),
-            request.prefix,
-            request.quantity,
-            request.explanation,
-            decode_id(logInToken["accountId"])
-        )
-    except ThingServiceException.WrongImageFormat:
-        raise HTTPException(status_code=409, detail=WRONG_IMAGE_FORMAT)
-
-    response = internal_dto_to_response_dto(thing)
-    return response
+    if logInToken is None: raise RequestManagerException.NotLoggedIn()
+    imageData = await imageFile.read()
+    quantity = Decimal(quantity)
+    createrId = decode_id(logInToken["accountId"])
+    try: thing = service.create(title, imageData, prefix, quantity, explanation, createrId)
+    except ThingServiceException.WrongImageFormat: raise HTTPException(status_code=409, detail=WRONG_IMAGE_FORMAT)
+    return internal2response(thing)
 
 @router.get("")
-def get_list(prefix: int = Query(ge=-10, le=10, example=0), page: int = Query(ge=0, example=0), service: ThingService = Depends()):
-    try:
-        things = service.get_list(prefix, page)
-    except ThingServiceException.NotFoundThing:
-        raise HTTPException(status_code=404)
-
-    response = [internal_dto_to_response_dto(thing) for thing in things]
-    return response
+def get_list(
+    prefix: int = Query(ge=-10, le=10, example=0),
+    page: int = Query(ge=0, example=0),
+    byAsc: bool = Query(default=True),
+    service: ThingService = Depends()
+):
+    things = service.get_list(prefix, page, byAsc)
+    return [internal2response(thing) for thing in things]
 
 @router.get("/{thingId:str}")
-def get(thingId: str, service: ThingService = Depends()):
-    thing = service.get(decode_id(thingId))
+def get(thingId: str, logInToken: dict | None = Depends(get_log_in_token), service: ThingService = Depends()):
+    thingId = decode_id(thingId)
+    if logInToken: accountId = decode_id(logInToken["accountId"])
+    else: accountId = None
+    thing = service.get(thingId, accountId)
     if thing is None: raise HTTPException(status_code=404)
-
-    response = internal_dto_to_response_dto(thing)
-    return response
+    return internal2response(thing)
 
 @router.patch("/{thingId:str}")
 async def update(
-    thingId: str,
-    request: ThingUpdateRequestDto = Depends(thing_update_body),
+    thingId: str = Path(),
+    title: str | None = Form(default=None, min_length=1, max_length=32, examples=["물체 이름"]),
     imageFile: UploadFile | None = File(default=None),
-    logInToken: dict = Depends(get_log_in_token),
+    prefix: int | None = Form(default=None, ge=-10, le=10, examples=[0]),
+    quantity: str | None = Form(default=None, pattern=DECIMAL_FORMAT, examples=[1.78]),
+    explanation: str | None = Form(default=None, in_length=0, max_length=500, examples=["물체 설명"]),
+    logInToken: dict | None = Depends(get_log_in_token),
     service: ThingService = Depends()
 ):
-    if imageFile: image = BytesIO(await imageFile.read())
-    else: image = None
+    if logInToken is None: raise RequestManagerException.NotLoggedIn()
+    thingId = decode_id(thingId)
+    imageData = await imageFile.read() if imageFile else None
+    quantity = Decimal(quantity) if quantity else None
+    accountId = decode_id(logInToken["accountId"])
     try:
-        thing = service.update(
-            decode_id(thingId),
-            decode_id(logInToken["accountId"]),
-            request.title,
-            image,
-            request.prefix,
-            request.quantity,
-            request.explanation
-        )
-    except ThingServiceException.NoAuthoiry:
-        raise HTTPException(status_code=403, detail=NO_AUTHORITY)
-    except ThingServiceException.NotFoundThing:
-        raise HTTPException(status_code=404)
-    except ThingServiceException.WrongImageFormat:
-        raise HTTPException(status_code=409, detail=WRONG_IMAGE_FORMAT)
-
-    response = internal_dto_to_response_dto(thing)
-    return response
+        thing = service.update(thingId, accountId, title, imageData, prefix, quantity, explanation)
+    except ThingServiceException.NoAuthoiry: raise HTTPException(status_code=403, detail=NO_AUTHORITY)
+    except ThingServiceException.NotFoundThing: raise HTTPException(status_code=404)
+    except ThingServiceException.WrongImageFormat: raise HTTPException(status_code=409, detail=WRONG_IMAGE_FORMAT)
+    return internal2response(thing)
 
 @router.delete("{thingId:str}")
 def delete(thingId: str, logInToken: dict = Depends(get_log_in_token), service: ThingService = Depends()):
+    if logInToken is None: raise RequestManagerException.NotLoggedIn()
+    thingId = decode_id(thingId)
+    accountId = decode_id(logInToken["accountId"])
     try:
-        service.delete(decode_id(thingId), decode_id(logInToken["accountId"]))
-    except ThingServiceException.NoAuthoiry:
-        raise HTTPException(status_code=403, detail=NO_AUTHORITY)
-    except ThingServiceException.NotFoundThing:
-        raise HTTPException(status_code=404)
-
+        service.delete(thingId, accountId)
+    except ThingServiceException.NoAuthoiry: raise HTTPException(status_code=403, detail=NO_AUTHORITY)
+    except ThingServiceException.NotFoundThing: raise HTTPException(status_code=404)
     return Response(status_code=200)
 
-def internal_dto_to_response_dto(thing: ThingInternalDto) -> ThingResponseDto:
-    result = ThingResponseDto(
-        thingId=encode_id(thing.thingId),
-        title=thing.title,
-        prefix=thing.prefix,
-        quantity=thing.quantity,
-        explanation=thing.explanation,
-        likesCount=thing.likesCount,
-        commentCount=thing.commentCount,
-        createdAt=thing.createdAt,
-        modifiedAt=thing.modifiedAt,
-        createrId=encode_id(thing.createrId),
-        createrName=thing.createrName,
-    )
-    return result
+def internal2response(internal: ThingSummaryInternalDto | ThingInternalDto) -> ThingSummaryResponseDto | ThingResponseDto:
+    model = internal.model_dump()
+    model["thingId"] = encode_id(model["thingId"])
+    model["createrId"] = encode_id(model["createrId"])
+    if type(internal) is ThingSummaryInternalDto: return ThingSummaryResponseDto(**model)
+    elif type(internal) is ThingInternalDto: return ThingResponseDto(**model)

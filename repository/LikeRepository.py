@@ -8,12 +8,12 @@ class LikeRepository:
         self.db = db
         
     def create(self, thingId: int, accountId: int):
-        like = Like(thingId=thingId, createrId=accountId)
+        like = Like(thingId=thingId, accountId=accountId)
         self.db.add(like)
         return like
     
     def delete(self, thingId: int, accountId: int):
-        statement = select(Like).where(and_(Like.thingId == thingId, Like.creater == accountId))
+        statement = select(Like).where(and_(Like.thingId == thingId, Like.accountId == accountId))
         like = self.db.execute(statement)
         self.db.delete(like)
     

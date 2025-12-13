@@ -15,12 +15,11 @@ class ThingUpdateRequestDto(BaseModel):
     quantity: Decimal | None
     explanation: str | None
 
-class ThingResponseDto(BaseModel):
+class ThingSummaryResponseDto(BaseModel):
     thingId: str
     title: str
     prefix: int
     quantity: Decimal
-    explanation: str
     likesCount: int
     commentCount: int
     createdAt: datetime
@@ -28,17 +27,26 @@ class ThingResponseDto(BaseModel):
     createrId: str
     createrName: str
 
-class ThingInternalDto(BaseModel):
-    thingId: int
+class ThingResponseDto(ThingSummaryResponseDto):
+    explanation: str
+    mine: bool
+    liked: bool
+
+class ThingSummaryInternalDto(BaseModel):
+    thingId: int | str
     title: str
     prefix: int
     quantity: Decimal
-    explanation: str
     likesCount: int
     commentCount: int
     createdAt: datetime
     modifiedAt: datetime
-    createrId: int
+    createrId: int | str
     createrName: str | None = Field(None)
 
     model_config = ConfigDict(from_attributes=True, extra="ignore")
+
+class ThingInternalDto(ThingSummaryInternalDto):
+    explanation: str
+    mine: bool
+    liked: bool
