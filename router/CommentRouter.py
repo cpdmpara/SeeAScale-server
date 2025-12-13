@@ -7,7 +7,7 @@ from utils.constant import NO_AUTHORITY
 
 router = APIRouter(prefix="/comment", tags=["comment"])
 
-@router.post("/{thingId:str}")
+@router.post("/{thingId:str}", status_code=201)
 def create(
     request: CommentCreateRequestDto,
     thingId: str = Path(),
