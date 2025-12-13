@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 from service.ThingService import ThingService, ThingServiceException
 from dto.ThingDto import ThingSummaryResponseDto, ThingResponseDto, ThingSummaryInternalDto, ThingInternalDto
 from utils.crypto_manager import encode_id, decode_id
-from utils.request_manager import RequestManagerException, get_log_in_token, thing_update_body
+from utils.request_manager import RequestManagerException, get_log_in_token
 from utils.constant import WRONG_IMAGE_FORMAT, NO_AUTHORITY, DECIMAL_FORMAT, IMAGE_STORAGE_PATH
 from decimal import Decimal
 

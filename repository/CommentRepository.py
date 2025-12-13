@@ -8,21 +8,19 @@ class CommentRepository:
     def __init__(self, db: Session = Depends(get_db)):
         self.db = db
 
-    def create(self, content: str, thing: Thing, createrId: int) -> Comment:
+    def create(self, content: str, thingId: int, createrId: int) -> Comment:
         now = datetime.now()
-
         comment = Comment(
             content=content,
             createdAt=now,
             modifiedAt=now,
             createrId=createrId,
-            thingId=thing.thingId
+            thingId=thingId
         )
         self.db.add(comment)
-        thing.commentCount += 1
         self.db.flush()
         self.db.refresh(comment)
-
+        comment.thing.commentCount += 1
         return comment
     
     def get(self, commentId: int) -> Comment | None:

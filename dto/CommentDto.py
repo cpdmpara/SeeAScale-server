@@ -24,6 +24,5 @@ class CommentInternalDto(BaseModel):
     modifiedAt: datetime
     createrId: int
     createrName: str | None = Field(default=None)
-    thingId: int
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="ignore")

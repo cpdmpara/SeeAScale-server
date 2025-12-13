@@ -14,11 +14,8 @@ class CommentService:
     def create(self, content: str, thingId: int, createrId: int) -> CommentInternalDto:
         thing = self.repository.get_thing(thingId)
         if thing is None: raise CommentServiceException.NotFoundThing()
-
         comment = self.repository.create(content, thing, createrId)
-
         result = comment_to_internal_dto(comment)
-
         self.repository.commit()
         return result
 
