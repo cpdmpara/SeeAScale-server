@@ -1,11 +1,11 @@
 from fastapi import APIRouter, UploadFile, Response, HTTPException, Depends, Form, File, Query, Path
+from fastapi.responses import FileResponse
 from service.ThingService import ThingService, ThingServiceException
 from dto.ThingDto import ThingSummaryResponseDto, ThingResponseDto, ThingSummaryInternalDto, ThingInternalDto
 from utils.crypto_manager import encode_id, decode_id
 from utils.request_manager import RequestManagerException, get_log_in_token, thing_update_body
-from utils.constant import WRONG_IMAGE_FORMAT, NO_AUTHORITY, DECIMAL_FORMAT
+from utils.constant import WRONG_IMAGE_FORMAT, NO_AUTHORITY, DECIMAL_FORMAT, IMAGE_STORAGE_PATH
 from decimal import Decimal
-from typing import Type
 
 router = APIRouter(prefix="/thing", tags=["thing"])
 
@@ -46,6 +46,16 @@ def get(thingId: str, logInToken: dict | None = Depends(get_log_in_token), servi
     if thing is None: raise HTTPException(status_code=404)
     return internal2response(thing)
 
+@router.get("{thingId:str}/image")
+def get_image(thingId: str = Path()):
+    thingId = decode_id(thingId)
+    try:
+        return FileResponse(
+            path=f"{IMAGE_STORAGE_PATH}/{thingId}.jpeg",
+            media_type="image/jpeg"
+        )
+    except: raise HTTPException(status_code=404)
+
 @router.patch("/{thingId:str}")
 async def update(
     thingId: str = Path(),
@@ -70,7 +80,7 @@ async def update(
     return internal2response(thing)
 
 @router.delete("{thingId:str}")
-def delete(thingId: str, logInToken: dict = Depends(get_log_in_token), service: ThingService = Depends()):
+def delete(thingId: str = Path(), logInToken: dict = Depends(get_log_in_token), service: ThingService = Depends()):
     if logInToken is None: raise RequestManagerException.NotLoggedIn()
     thingId = decode_id(thingId)
     accountId = decode_id(logInToken["accountId"])

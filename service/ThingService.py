@@ -99,7 +99,7 @@ def process_image(image: Image.Image) -> Image.Image:
     processedImage = Image.new("RGB", (max_side, max_side), (255, 255, 255))
     offset = ((max_side - w) // 2, (max_side - h) // 2)
     processedImage.paste(image, offset)
-    processedImage = processedImage.resize((512, 512), Image.Resampling.LANCZOS)
+    processedImage = processedImage.resize((1024, 1024), Image.Resampling.LANCZOS)
     return processedImage
 
 def unit_standardization(prefix: int, quantity: Decimal) -> Decimal:
