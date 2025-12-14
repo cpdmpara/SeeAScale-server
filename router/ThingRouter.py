@@ -46,7 +46,7 @@ def get(thingId: str, logInToken: dict | None = Depends(get_log_in_token), servi
     if thing is None: raise HTTPException(status_code=404)
     return internal2response(thing)
 
-@router.get("{thingId:str}/image")
+@router.get("/{thingId:str}/image")
 def get_image(thingId: str = Path()):
     thingId = decode_id(thingId)
     try:
@@ -79,7 +79,7 @@ async def update(
     except ThingServiceException.WrongImageFormat: raise HTTPException(status_code=409, detail=WRONG_IMAGE_FORMAT)
     return internal2response(thing)
 
-@router.delete("{thingId:str}")
+@router.delete("/{thingId:str}")
 def delete(thingId: str = Path(), logInToken: dict = Depends(get_log_in_token), service: ThingService = Depends()):
     if logInToken is None: raise RequestManagerException.NotLoggedIn()
     thingId = decode_id(thingId)
