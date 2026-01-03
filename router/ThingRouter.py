@@ -30,11 +30,10 @@ async def create(
 @router.get("")
 def get_list(
     prefix: int = Query(ge=-10, le=10, example=0),
-    page: int = Query(ge=0, example=0),
-    byAsc: bool = Query(default=True),
+    page: int = Query(example=0),
     service: ThingService = Depends()
 ):
-    things = service.get_list(prefix, page, byAsc)
+    things = service.get_list(prefix, page)
     return [internal2response(thing) for thing in things]
 
 @router.get("/{thingId:str}")

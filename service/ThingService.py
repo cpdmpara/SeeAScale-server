@@ -38,8 +38,8 @@ class ThingService:
         self.repository.commit()
         return result
 
-    def get_list(self, prefix: int, page: int, byAsc: bool) -> list[ThingSummaryInternalDto]:
-        things = self.repository.get_list(prefix, page, byAsc)
+    def get_list(self, prefix: int, page: int) -> list[ThingSummaryInternalDto]:
+        things = self.repository.get_list(prefix, page)
         result = [thing2summary(thing) for thing in things]
         return result
     
